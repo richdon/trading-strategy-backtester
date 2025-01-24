@@ -1,16 +1,29 @@
-# This is a sample Python script.
-
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+from flask import Flask
+from extensions import db, ma
+from controller import backtest_bp
 
 
-# Press the green button in the gutter to run the script.
+def create_app():
+    app = Flask(__name__)
+
+    # Configuration
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///backtest.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    # Initialize extensions
+    db.init_app(app)
+    ma.init_app(app)
+
+    # Register blueprints
+    app.register_blueprint(backtest_bp, url_prefix='/api')
+
+    # Create tables
+    with app.app_context():
+        db.create_all()
+
+    return app
+
+
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    app = create_app()
+    app.run(debug=True)
