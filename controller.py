@@ -13,6 +13,12 @@ STRATEGIES = {
     'Simple Moving Average': TradingStrategies.moving_average_strategy
 }
 
+# Default params mapping
+DEFAULT_PARAMS = {
+    'MACD Crossover': TradingStrategies.mac_d_crossover_params_by_interval,
+    'Simple Moving Average': TradingStrategies.moving_average_params_by_interval
+}
+
 
 @backtest_bp.route('/backtest', methods=['POST'])
 def run_backtest():
@@ -24,16 +30,23 @@ def run_backtest():
         data = request.get_json()
 
         # Validate strategy exists
-        strategy_name = data.get('strategy')
-        if strategy_name not in STRATEGIES:
+        if not (strategy_name := data.get('strategy')):
             return jsonify({'error': 'Invalid strategy'}), 400
+
+        asset = data['asset']
+        start_date = data['start_date']
+        end_date = data['end_date']
+        interval = data.get('interval', '1d')
+        initial_capital = data.get('initial_capital', 10000)
+        params = data.get('strategy_params') or DEFAULT_PARAMS[strategy_name](interval)
 
         # Fetch price data
         try:
             price_data = TradingStrategies.fetch_price_data(
-                data['asset'],
-                data['start_date'],
-                data['end_date']
+                asset,
+                start_date,
+                end_date,
+                interval
             )
         except ValueError as e:
             return jsonify({'error': str(e)}), 400
@@ -42,18 +55,20 @@ def run_backtest():
         strategy_func = STRATEGIES[strategy_name]
         backtest_results = strategy_func(
             price_data,
-            data.get('strategy_params', {}),
-            data.get('initial_capital', 10000)
+            initial_capital,
+            interval,
+            params
         )
 
         # Create and save backtest record
         backtest = BacktestStrategy(
             strategy=strategy_name,
-            asset=data['asset'],
-            start_date=datetime.strptime(data['start_date'], '%Y-%m-%d').date(),
-            end_date=datetime.strptime(data['end_date'], '%Y-%m-%d').date(),
-            initial_capital=data.get('initial_capital', 10000),
-            strategy_params=data.get('strategy_params', {}),
+            asset=asset,
+            start_date=datetime.strptime(start_date, '%Y-%m-%d').date(),
+            end_date=datetime.strptime(end_date, '%Y-%m-%d').date(),
+            initial_capital=initial_capital,
+            strategy_params=params,
+            interval=interval,
             backtest_results=backtest_results
         )
 
@@ -81,8 +96,11 @@ def list_backtests():
     return jsonify([{
         'id': bt.id,
         'strategy': bt.strategy,
+        'params': bt.strategy_params,
         'asset': bt.asset,
+        'interval': bt.interval,
         'start_date': bt.start_date.isoformat(),
         'end_date': bt.end_date.isoformat(),
+        'initial_capital': bt.initial_capital,
         'final_portfolio_value': bt.backtest_results.get('final_portfolio_value') if bt.backtest_results else None
     } for bt in backtests]), 200

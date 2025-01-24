@@ -1,4 +1,3 @@
-# models.py
 from extensions import db
 from datetime import datetime
 import uuid
@@ -25,6 +24,7 @@ class BacktestStrategy(db.Model):
     asset = db.Column(db.String(20), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
+    interval = db.Column(db.String, nullable=False)
     initial_capital = db.Column(db.Float, default=10000)
 
     # JSON column for flexible strategy parameters
@@ -36,4 +36,4 @@ class BacktestStrategy(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f'<BacktestStrategy {self.strategy} - {self.asset}>'
+        return f'<BacktestStrategy {self.strategy} - {self.asset} - {self.interval}>'
