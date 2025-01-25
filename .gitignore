@@ -2,3 +2,5 @@
 .venv
 .env
 /instance
+__pycache__
+backtest.db
