@@ -171,12 +171,17 @@ class TradingStrategies:
         position_multiplier = interval_multipliers.get(interval, 0.5)
 
         for i in range(len(data)):
+            trade = "HOLD"
+            close_price = data['Close'][i]
             if i < slow_period:
                 trades.append({
                     'date': data.index[i].strftime('%Y-%m-%d %H:%M:%S'),
                     'portfolio_value': capital,
                     'position': position,
-                    'price': data['Close'][i]
+                    'price': close_price,
+                    'capital': capital,
+                    'asset': close_price * position,
+                    'trade': trade
                 })
                 continue
 
@@ -194,21 +199,27 @@ class TradingStrategies:
             if buy_signal:
                 # Dynamic position sizing based on interval
                 investment_amount = capital * position_multiplier
-                shares_to_buy = investment_amount / data['Close'][i]
+                shares_to_buy = investment_amount / close_price
                 position += shares_to_buy
                 capital -= investment_amount
+                trade = "BUY"
 
             elif sell_signal:
                 # Partial or full position liquidation
                 sell_portion = position * position_multiplier
-                capital += sell_portion * data['Close'][i]
+                capital += sell_portion * close_price
                 position -= sell_portion
+                trade = "SELL"
 
+            asset = position * close_price
             trades.append({
                 'date': data.index[i].strftime('%Y-%m-%d %H:%M:%S'),
-                'portfolio_value': capital + (position * data['Close'][i]),
+                'portfolio_value': capital + asset,
                 'position': position,
-                'price': data['Close'][i]
+                'price': close_price,
+                'capital': capital,
+                'asset': asset,
+                'trade': trade
             })
 
         # Calculate performance metrics
@@ -263,12 +274,17 @@ class TradingStrategies:
         trades = []
 
         for i in range(len(data)):
+            trade = 'HOLD'
+            close_price = data['Close'][i]
             if i < long_window:
                 trades.append({
                     'date': data.index[i].strftime('%Y-%m-%d %H:%M:%S'),
                     'portfolio_value': capital,
                     'position': position,
-                    'price': data['Close'][i]
+                    'price': close_price,
+                    'capital': capital,
+                    'asset': close_price * position,
+                    'trade': trade
                 })
                 continue
 
@@ -286,21 +302,27 @@ class TradingStrategies:
             if buy_signal:
                 # Dynamic position sizing
                 investment_amount = capital * position_multiplier
-                shares_to_buy = investment_amount / data['Close'][i]
+                shares_to_buy = investment_amount / close_price
                 position += shares_to_buy
                 capital -= investment_amount
+                trade = 'BUY'
 
             elif sell_signal:
                 # Partial or full position liquidation
                 sell_portion = position * position_multiplier
-                capital += sell_portion * data['Close'][i]
+                capital += sell_portion * close_price
                 position -= sell_portion
+                trade = 'SELL'
 
+            asset = position * close_price
             trades.append({
                 'date': data.index[i].strftime('%Y-%m-%d %H:%M:%S'),
-                'portfolio_value': capital + (position * data['Close'][i]),
+                'portfolio_value': capital + (position * close_price),
                 'position': position,
-                'price': data['Close'][i]
+                'price': close_price,
+                'capital': capital,
+                'asset': asset,
+                'trade': trade
             })
 
         # Performance metrics
