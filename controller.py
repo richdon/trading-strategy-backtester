@@ -1,6 +1,7 @@
+from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask import Blueprint, request, jsonify
 from extensions import db
-from models import BacktestStrategy
+from models import BacktestStrategy, User
 from strategies import TradingStrategies
 from marshmallow import ValidationError
 from datetime import datetime
@@ -21,11 +22,19 @@ DEFAULT_PARAMS = {
 
 
 @backtest_bp.route('/backtest', methods=['POST'])
+@jwt_required()
 def run_backtest():
     """
     Endpoint to run and save a trading strategy backtest
     """
     try:
+        # Get current user
+        current_user_id = get_jwt_identity()
+        user = User.query.get(current_user_id)
+
+        if not user:
+            return jsonify({'error': 'User not found'}), 404
+
         # Validate incoming data
         data = request.get_json()
 
@@ -48,7 +57,7 @@ def run_backtest():
                 end_date,
                 interval
             )
-        except ValueError as e:
+        except ValidationError as e:
             return jsonify({'error': str(e)}), 400
 
         # Run backtest
@@ -62,6 +71,7 @@ def run_backtest():
 
         # Create and save backtest record
         backtest = BacktestStrategy(
+            user_id=current_user_id,
             strategy=strategy_name,
             asset=asset,
             start_date=datetime.strptime(start_date, '%Y-%m-%d').date(),
@@ -88,11 +98,16 @@ def run_backtest():
 
 
 @backtest_bp.route('/backtests', methods=['GET'])
+@jwt_required()
 def list_backtests():
     """
-    Retrieve all saved backtest strategies
+    Retrieve saved backtest strategies for current user
     """
-    backtests = BacktestStrategy.query.all()
+    current_user_id = get_jwt_identity()
+
+    # Fetch only the current user's backtests
+    backtests = BacktestStrategy.query.filter_by(user_id=current_user_id).all()
+
     return jsonify([{
         'id': bt.id,
         'strategy': bt.strategy,
