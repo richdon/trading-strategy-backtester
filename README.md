@@ -13,23 +13,24 @@ Pipenv or virtualenv (optional, for dependency management)
 ### Steps
 
 Clone the repository:
-
+```
 git clone https://github.com/richdon/trading-strategy-backtester.git
 cd trading-backtesting-bot
+```
 
 Create and activate a virtual environment (optional):
-
+```
 python -m venv venv
 source venv/bin/activate # For Linux/Mac
 venv\Scripts\activate   # For Windows
-
+```
 Install dependencies:
 
-pip install -r requirements.txt
+`pip install -r requirements.txt`
 
 Start the Flask development server:
 
-flask run
+`flask run`
 
 The app will be accessible at http://127.0.0.1:5000/.
 
