@@ -122,7 +122,8 @@ class TradingStrategies:
                 end=end_date,
                 interval=interval
             )
-
+            if data.empty:
+                return []
             # Add additional calculated columns
             data['Returns'] = data['Close'].pct_change()
             data['Log_Returns'] = np.log(1 + data['Returns'])
@@ -231,12 +232,12 @@ class TradingStrategies:
         sharpe_ratio = returns.mean() / returns.std() * np.sqrt(252)  # Annualized
 
         return {
-            'trades': trades,
             'final_portfolio_value': final_portfolio_value,
             'total_return_percentage': total_return,
             'sharpe_ratio': sharpe_ratio,
             'interval': interval,
-            'initial_capital': initial_capital
+            'initial_capital': initial_capital,
+            'trades': trades,
         }
 
     @classmethod
@@ -334,12 +335,12 @@ class TradingStrategies:
         sharpe_ratio = returns.mean() / returns.std() * np.sqrt(252)  # Annualized
 
         return {
-            'trades': trades,
             'final_portfolio_value': final_portfolio_value,
             'total_return_percentage': total_return,
             'sharpe_ratio': sharpe_ratio,
             'interval': interval,
-            'initial_capital': initial_capital
+            'initial_capital': initial_capital,
+            'trades': trades
         }
 
 
