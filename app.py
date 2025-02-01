@@ -1,13 +1,24 @@
-from flask import Flask
 from database_utils import init_db_commands
 from extensions import db, login_manager, ma, bcrypt, jwt
-from auth import auth_bp
-from controller import backtest_bp
+from flask import Flask
+
 from models import User
+from routes import initialize_routes, register_routes, configure_swagger_ui
+from auth import auth_ns
+from backtest import backtest_ns
 
 
 def create_app():
     app = Flask(__name__)
+
+    # Initialize Swagger routes
+    blueprint, api = initialize_routes()
+
+    # Register routes with the application
+    register_routes(app, blueprint)
+
+    # Configure Swagger UI
+    configure_swagger_ui(app)
 
     # Configuration
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///backtest.db'
@@ -32,9 +43,9 @@ def create_app():
     def load_user(user_id):
         return User.query.get(user_id)
 
-    # Register blueprints
-    app.register_blueprint(auth_bp, url_prefix='/api/auth')
-    app.register_blueprint(backtest_bp, url_prefix='/api')
+    # Add namespaces
+    api.add_namespace(auth_ns, path='/api/auth')
+    api.add_namespace(backtest_ns, path='/api/backtest')
 
     # Create tables
     with app.app_context():
