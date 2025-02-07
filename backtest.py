@@ -6,7 +6,7 @@ from datetime import datetime
 from marshmallow import ValidationError
 from extensions import db
 from models import User, BacktestStrategy
-from namespace_backspace import backtest_ns, backtest_request, backtest_response, backtest_summary
+from namespace_backtest import backtest_ns, backtest_request, backtest_response, backtest_summary
 from strategies import TradingStrategies
 
 # Strategy mapping

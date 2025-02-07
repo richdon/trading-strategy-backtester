@@ -2,7 +2,7 @@ from flask_restx import Api
 from flask import Blueprint, request
 from auth import auth_ns
 from backtest import backtest_ns
-from models_docs import create_api_models
+from live_trading import live_trading_ns
 
 
 def initialize_routes():
@@ -42,6 +42,7 @@ def initialize_routes():
     # Add namespaces
     api.add_namespace(auth_ns)
     api.add_namespace(backtest_ns)
+    api.add_namespace(live_trading_ns)
 
     # Global error handlers
     @api.errorhandler(Exception)

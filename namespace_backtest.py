@@ -1,4 +1,3 @@
-# Create namespace for backtest endpoints
 from flask_restx import Namespace, fields
 
 backtest_ns = Namespace(
@@ -61,7 +60,7 @@ backtest_request = backtest_ns.model('BacktestRequest', {
     'asset': fields.String(
         required=True,
         description='Trading asset symbol (e.g., BTC/USDT)',
-        example='BTC/USDT'
+        example='BTC/USD'
     ),
     'start_date': fields.String(
         required=True,
@@ -172,7 +171,7 @@ backtest_summary = backtest_ns.model('BacktestSummary', {
     ),
     'asset': fields.String(
         description='Trading asset',
-        example='BTC/USDT'
+        example='BTC/USD'
     ),
     'interval': fields.String(
         description='Trading interval',
