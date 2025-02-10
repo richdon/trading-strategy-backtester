@@ -8,10 +8,21 @@ from routes import initialize_routes, register_routes, configure_swagger_ui
 from auth import auth_ns
 from backtest import backtest_ns
 from dotenv import load_dotenv
+from config import config
 
-def create_app():
+load_dotenv()
+
+
+def create_app(config_name: str = None):
     app = Flask(__name__)
-    load_dotenv()
+
+    # Use environment variable if config_name not provided
+    if config_name is None:
+        config_name = os.getenv('FLASK_ENV', 'development')
+
+    # Load the configuration
+    app.config.from_object(config[config_name])
+
     # Initialize Swagger routes
     blueprint, api = initialize_routes()
 
@@ -20,13 +31,6 @@ def create_app():
 
     # Configure Swagger UI
     configure_swagger_ui(app)
-
-
-    # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
-    app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
 
     # Initialize extensions
     db.init_app(app)
@@ -49,13 +53,20 @@ def create_app():
     api.add_namespace(auth_ns, path='/api/auth')
     api.add_namespace(backtest_ns, path='/api/backtest')
 
-    # Create tables
+    # Create tables if they don't exist
     with app.app_context():
-        db.create_all()
+        try:
+            db.create_all()
+        except Exception as e:
+            print(f"Database initialization error (this is often okay on startup): {e}")
 
     return app
 
 
+# Create the application instance
+app = create_app()
+
 if __name__ == '__main__':
-    app = create_app()
-    app.run(debug=True)
+    # app = create_app()
+    # app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)

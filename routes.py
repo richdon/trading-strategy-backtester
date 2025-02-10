@@ -1,4 +1,4 @@
-from flask_restx import Api
+from flask_restx import Api, Resource
 from flask import Blueprint, request
 from auth import auth_ns
 from backtest import backtest_ns
@@ -38,6 +38,14 @@ def initialize_routes():
         },
         security='jwt'
     )
+
+    # Add health check endpoint
+    @api.route('/health')
+    class HealthCheck(Resource):
+        @api.doc('health_check')
+        def get(self):
+            """Health check endpoint for Docker"""
+            return {"status": "healthy"}, 200
 
     # Add namespaces
     api.add_namespace(auth_ns)

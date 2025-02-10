@@ -159,6 +159,8 @@ class BacktestGreatestReturn(Resource):
         bt = BacktestStrategy.query.filter_by(user_id=current_user_id).order_by(
             db.text("(CAST(backtest_results->>'final_portfolio_value' AS DECIMAL) - initial_capital) DESC")
         ).first()
+        if not bt:
+            return [], 200
         return {
             'id': str(bt.id),
             'strategy': bt.strategy,
