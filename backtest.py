@@ -97,7 +97,7 @@ class Backtest(Resource):
             db.session.commit()
             backtest_results['asset'] = asset
             return {
-                'backtest_id': backtest.id,
+                'backtest_id': str(backtest.id),
                 'results': backtest_results,
             }, 201
 
@@ -127,15 +127,15 @@ class Backtest(Resource):
         backtests = BacktestStrategy.query.filter_by(user_id=current_user_id).all()
 
         return [{
-            'id': bt.id,
+            'id': str(bt.id),
             'strategy': bt.strategy,
             'params': bt.strategy_params,
             'asset': bt.asset,
             'interval': bt.interval,
             'start_date': bt.start_date.isoformat(),
             'end_date': bt.end_date.isoformat(),
-            'initial_capital': bt.initial_capital,
-            'final_portfolio_value': bt.backtest_results.get('final_portfolio_value') if bt.backtest_results else None
+            'initial_capital': float(bt.initial_capital),
+            'final_portfolio_value': float(bt.backtest_results.get('final_portfolio_value')) if bt.backtest_results else None
         } for bt in backtests], 200
 
 
@@ -155,19 +155,21 @@ class BacktestGreatestReturn(Resource):
         current_user_id = get_jwt_identity()
 
         # Fetch only the current user's backtests
+        # PostgresSQL-specific query using CAST to convert JSON value to numeric
         bt = BacktestStrategy.query.filter_by(user_id=current_user_id).order_by(
-            (BacktestStrategy.backtest_results['final_portfolio_value'] -
-             BacktestStrategy.initial_capital).desc()).first()
+            db.text("(CAST(backtest_results->>'final_portfolio_value' AS DECIMAL) - initial_capital) DESC")
+        ).first()
         return {
-            'id': bt.id,
+            'id': str(bt.id),
             'strategy': bt.strategy,
             'params': bt.strategy_params,
             'asset': bt.asset,
             'interval': bt.interval,
             'start_date': bt.start_date.isoformat(),
             'end_date': bt.end_date.isoformat(),
-            'initial_capital': bt.initial_capital,
-            'final_portfolio_value': bt.backtest_results.get('final_portfolio_value') if bt.backtest_results else None
+            'initial_capital': float(bt.initial_capital),
+            'final_portfolio_value': float(bt.backtest_results.get('final_portfolio_value'))
+            if bt.backtest_results else None
         }, 200
 
 
