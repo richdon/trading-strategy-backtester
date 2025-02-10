@@ -36,6 +36,7 @@ numpy==1.24.3
 packaging==24.2
 pandas==2.0.1
 peewee==3.17.8
+psycopg2-binary==2.9.10
 PyJWT==2.10.1
 python-dateutil==2.9.0.post0
 python-dotenv==1.0.1
